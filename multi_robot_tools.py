@@ -95,13 +95,14 @@ class MultiRobotTools():
     def aggregate_separator(self):
         for each_robot in self.edge_dict.keys():
             edge_dict = self.edge_dict[each_robot]
-            vertex_dict = self.vertex_dict[each_robot]
             for key_pair in edge_dict.keys():
-                print(key_pair)
                 if(self.is_separator(key_pair)):
                     if(not self.separator.exists(key_pair)):
-                        vertex0 = vertex_dict[key_pair[0]]
-                        vertex1 = vertex_dict[key_pair[1]]
+                        id0 = self.key2robot_id(key_pair[0])
+                        id1 = self.key2robot_id(key_pair[1])
+                        
+                        vertex0 = self.vertex_dict[id0][key_pair[0]]
+                        vertex1 = self.vertex_dict[id1][key_pair[1]]
                         edge = edge_dict[key_pair]
                         self.separator.add(key_pair,vertex0,vertex1,edge)
         
@@ -111,7 +112,6 @@ class MultiRobotTools():
         self.aggregate_separator()
         edge_dict_copy = copy.deepcopy(self.edge_dict)
         vertex_dict_copy = copy.deepcopy(self.vertex_dict)
-        
         for robot_id in edge_dict_copy.keys():
             edge_dict = edge_dict_copy[robot_id]
             vertex_dict = vertex_dict_copy[robot_id]
@@ -120,7 +120,18 @@ class MultiRobotTools():
             vertex_dict.update(self.separator.vertex)
             file_name = os.path.join(self.data_dir,str(robot_id)+'_separator'+'.g2o')
             self.g2o_reader.write_dict(file_name,vertex_dict,edge_dict)
-        
+
+    def graph_info(self):
+        self.aggregate_separator()
+        self.aggregate_graph()
+        print("----Total info---")
+        print("total vertex num:"+str(len(self.vertex_dict_sum)))
+        print("total edge num:"+str(len(self.edge_dict_sum)))
+        print("---Separator info---")
+        print("separator vertex num:"+str(len(self.separator.vertex)))
+        print("separator edge num:"+str(len(self.separator.edge)))
+
+
 
 if __name__ == '__main__':
     data_dir = '/home/jiangpin/dataset/test_4robots'
@@ -129,3 +140,5 @@ if __name__ == '__main__':
     multi_robot_tools.read_g2o()
     
     multi_robot_tools.spread_separator()
+    multi_robot_tools.graph_info()
+    # multi_robot_tools.aggregate_graph()

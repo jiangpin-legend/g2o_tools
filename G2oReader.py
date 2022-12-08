@@ -7,19 +7,21 @@ class G2oReader:
         self.edge = {}
     
     def read(self,file_name):
+        vertex = {}
+        edge = {}
         with open(file_name,'r') as g2o_file:
             for each_line in g2o_file:
                 try:
                     g2o__line = each_line.split(' ')
                     identifier= g2o__line[0]
                     if identifier == 'VERTEX_SE3:QUAT':
-                        self.vertex[g2o__line[1]] = (g2o__line[2:-1])
+                        vertex[g2o__line[1]] = (g2o__line[2:-1])
                     elif identifier=='EDGE_SE3:QUAT':
-                        self.edge[(g2o__line[1],g2o__line[2])] = (g2o__line[3:-1])
+                        edge[(g2o__line[1],g2o__line[2])] = (g2o__line[3:-1])
                 except ValueError:
                     pass
         
-        return self.vertex,self.edge
+        return vertex,edge
   
     def write(self,file_name,vertex_lines,edge_lines):
         with open(file_name,'w') as g2o_file:
@@ -51,7 +53,7 @@ class G2oReader:
     def vertex_dict2lines(self,vertex_dict):
         vertex_lines = []
         for key,data in zip(vertex_dict.keys(),vertex_dict.values()):
-            line = ''
+            line = 'VERTEX_SE3:QUAT '
             line =line+key
             for each in data:
                 line = line+' '+each
@@ -62,7 +64,9 @@ class G2oReader:
     def edge_dict2lines(self,edge_dict):
         edge_lines = []
         for key_pair,data in zip(edge_dict.keys(),edge_dict.values()):
-            edge_line = key_pair[0]+' '+key_pair[1]
+            edge_line = 'EDGE_SE3:QUAT '
+            
+            edge_line += key_pair[0]+' '+key_pair[1]
             for each in data:
                 edge_line = edge_line+' '+each
             edge_line += '\n'
