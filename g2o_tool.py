@@ -22,7 +22,22 @@ class G2oTool:
                     pass
         
         return vertex,edge
-  
+    
+    def read_edge_keys(self,file_name):
+        edge_keys = []
+        with open(file_name,'r') as g2o_file:
+            for each_line in g2o_file:
+                try:
+                    g2o__line = each_line.split(' ')
+                    identifier= g2o__line[0]
+                    if identifier == 'VERTEX_SE3:QUAT':
+                        pass
+                    elif identifier=='EDGE_SE3:QUAT':
+                        edge_keys.append([int(g2o__line[1]),int(g2o__line[2])])
+                except ValueError:
+                    pass
+        return edge_keys
+
     def write(self,file_name,vertex_lines,edge_lines):
         with open(file_name,'w') as g2o_file:
             g2o_file.writelines(vertex_lines)
@@ -76,6 +91,8 @@ class G2oTool:
 if __name__ == '__main__':
     g2o_tool = G2oTool()
     vertex,edge = g2o_tool.read('/home/jiangpin/dataset/example_4robots/0.g2o')
+    edge_keys = g2o_tool.read_edge_keys('/home/jiangpin/dataset/example_4robots/0.g2o')
+
     # print(vertex)
-    print()
-    print(edge)
+    # print()
+    print(edge_keys)
