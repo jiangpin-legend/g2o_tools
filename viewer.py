@@ -1,10 +1,11 @@
 #!/usr/bin/python3.6
 # -*- coding: UTF-8 -*-
+from multiprocessing import Process, Queue
 
 import pangolin as pango
 import numpy as np
 import OpenGL.GL as gl
-from multiprocessing import Process, Queue
+
 
 class Viewer3D(object):
   '''

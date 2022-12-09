@@ -1,12 +1,13 @@
 #!/usr/bin/python3.6
 # -*- coding: UTF-8 -*-
+from multiprocessing import Process, Queue
 
 import pangolin as pango
 import numpy as np
 import OpenGL.GL as gl
-from multiprocessing import Process, Queue
 
-class Viewer3D(object):
+
+class MultiViewer3D(object):
   '''
   3d viewer for g2o maps
     - based off ficiciSLAM's viewer
@@ -50,6 +51,7 @@ class Viewer3D(object):
 
     pango.RegisterKeyPressCallback(ord('r'), self.optimize_callback)
     pango.RegisterKeyPressCallback(ord('t'), self.switch_callback)
+    
   def refresh(self):
     #clear and activate screen
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)

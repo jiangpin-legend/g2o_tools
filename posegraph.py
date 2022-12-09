@@ -1,10 +1,13 @@
 #!/usr/bin/python3.6
 # -*- coding: UTF-8 -*-
+import sys
 
 import g2o
 import numpy as np
+
 from viewer import *
-import sys
+from g2o_tool import G2oTool
+
 class PoseGraph3D(object):
   nodes = []
   edges = []
@@ -18,27 +21,28 @@ class PoseGraph3D(object):
     self.optimizer = g2o.SparseOptimizer()
     self.optimizer.set_verbose(verbose)
     self.optimizer.set_algorithm(self.solver)
+    self.g2o_tool = G2oTool()
 
   def load_file(self, fname):
     self.optimizer.load(fname)
     print("vertices: ", len(self.optimizer.vertices()))
     print("edges: ", len(self.optimizer.edges()))
 
+    self.edges_key_pairs = self.g2o_tool.read_edge_keys(fname)
+
     for edge in self.optimizer.edges():
       self.edges.append([edge.vertices()[0].estimate().matrix(), edge.vertices()[1].estimate().matrix()])
 
     self.nodes = np.array([i.estimate().matrix() for i in self.optimizer.vertices().values()])
     self.nodes_keys = self.optimizer.vertices().keys()
-    for i,edge in enumerate(self.optimizer.edges()):
-        print(edge.vertices())
-    # print(edge.vertices())
-    # self.edges_key_pairs = [ (edge.vertices().keys()[0],edge.vertices().keys()[1]) for edge in self.optimizer.edges()]
-    # self.edges_key_pairs = [ print(edge) for edge in self.optimizer.edges()]
-
-
+    
     self.nodes = np.array(self.nodes)
     self.edges = np.array(self.edges)
-    print(self.nodes_keys)
+    self.nodes_keys = np.array(self.nodes_keys)
+    self.edges_key_pairs = np.array(self.edges_key_pairs)
+    
+    # self.nodes_keys = np.array(self.nodes_keys)
+    # print(self.nodes_keys)
     # print(self.edges_key_pairs)
   
   def optimize(self, iterations=1):
