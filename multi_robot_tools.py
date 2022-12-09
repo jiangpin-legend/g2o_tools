@@ -4,6 +4,7 @@
 import os
 import copy
 
+import numpy as np
 from g2o_tool import G2oTool
 
 class Separator():
@@ -26,7 +27,7 @@ class Separator():
 
 
 class MultiRobotTools():
-    def __init__(self,data_dir,robot_num) -> None:
+    def __init__(self,data_dir=None,robot_num=0) -> None:
         self.data_dir = data_dir
         self.robot_num = robot_num
         self.vertex_dict = {}
@@ -46,32 +47,39 @@ class MultiRobotTools():
             self.vertex_dict[robot_id] = vertex
             self.edge_dict[robot_id] = edge
 
-    def key2robot_id(self,key):
-        robot_id = int(key)//100000000000000000
-        robot_id -= 69
-        return robot_id
-
     def rename_gtsam_id(self):
 
         edge_dict_copy = copy.deepcopy(self.edge_dict)
         vertex_dict_copy = copy.deepcopy(self.vertex_dict)
+        vertex_rename_sum = {}
+        edge_rename_sum = {}
         for robot_id in range(self.robot_num):
             vertex_dict = vertex_dict_copy[robot_id]
             edge_dict = edge_dict_copy[robot_id]
-  
+            # print(robot_id)
+            # print(vertex_dict.keys())
+            # print(edge_dict.keys())
+            new_vertex_dict = {}
             for key in vertex_dict.keys():
                 newkey = self.id_gtsam2g2o(key)
-                vertex_dict[newkey] = vertex_dict.pop(key)
+                new_vertex_dict[newkey] = vertex_dict[key]
+
+            # vertex_dict[newkey] = vertex_dict.pop(key)
+            new_edge_dict = {}
+
             for key_pair in edge_dict.keys():
                 new_key0 = self.id_gtsam2g2o(key_pair[0])
                 new_key1 = self.id_gtsam2g2o(key_pair[1])
-                edge_dict[(new_key0,new_key1)] = edge_dict.pop(key_pair)
+                new_edge_dict[(new_key0,new_key1)] = edge_dict[key_pair]
+                # edge_dict[(new_key0,new_key1)] = edge_dict.pop(key_pair)
+            vertex_rename_sum.update(new_vertex_dict)
+            edge_rename_sum.update(new_edge_dict)
 
             file_name = os.path.join(self.data_dir,str(robot_id)+'_renamed.g2o')
-            self.g2o_tool.write_dict(file_name,vertex_dict,edge_dict)
+            self.g2o_tool.write_dict(file_name,new_vertex_dict,new_edge_dict)
         self.aggregate_graph()
         file_name = os.path.join(self.data_dir,'full_graph_renamed.g2o')
-        self.g2o_tool.write_dict(file_name,self.vertex_dict_sum,self.edge_dict_sum) 
+        self.g2o_tool.write_dict(file_name,vertex_rename_sum,edge_rename_sum) 
 
     def is_separator(self,key_pair):
         key0 = key_pair[0]
@@ -79,6 +87,23 @@ class MultiRobotTools():
         id0  = self.key2robot_id(key0)
         id1  = self.key2robot_id(key1)
         return id0 != id1
+
+    def is_separator_g2o(self,key_pair):
+        key0 = key_pair[0]
+        key1 = key_pair[1]
+        id0  = self.key2robot_id_g2o(key0)
+        id1  = self.key2robot_id_g2o(key1)
+        return id0!=id1
+
+    def key2robot_id(self,key):
+        robot_id = int(key)//100000000000000000
+        robot_id -= 69
+        return robot_id
+
+    def key2robot_id_g2o(self,key):
+        robot_id = int(key)//1000000
+        robot_id-=1
+        return robot_id
 
     def id_gtsam2g2o(self,key):
         #rename the id in gtsam so that g2o can handle
@@ -118,8 +143,7 @@ class MultiRobotTools():
                 if(self.key2robot_id(key_pair[0])==robot_id or self.key2robot_id(key_pair[1])==robot_id):
                     edge_dict[robot_id].update({key_pair,edge[key_pair]})
             self.g2o_tool.write_dict(base_name+'_'+str(robot_id)+'.g2o',vertex_dict[robot_id],edge_dict[robot_id])
-        
-    
+
     def aggregate_separator(self):
         for each_robot in self.edge_dict.keys():
             edge_dict = self.edge_dict[each_robot]
@@ -161,12 +185,13 @@ class MultiRobotTools():
 
 
 if __name__ == '__main__':
-    data_dir = '/home/jiangpin/dataset/test_4robots'
+    # data_dir = '/home/jiangpin/dataset/test_4robots'
+    data_dir = "/home/jiangpin/dataset/example_4robots/"
     num = 4
     multi_robot_tools = MultiRobotTools(data_dir,num)
     multi_robot_tools.read_g2o()
     
-    multi_robot_tools.spread_separator()
-    multi_robot_tools.aggregate_graph()
-    multi_robot_tools.graph_info()
+    # multi_robot_tools.spread_separator()
+    # multi_robot_tools.aggregate_graph()
+    # multi_robot_tools.graph_info()
     multi_robot_tools.rename_gtsam_id()

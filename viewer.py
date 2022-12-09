@@ -23,11 +23,11 @@ class Viewer3D(object):
     self.graph = graph
     self.nodes = np.dot(graph.nodes, self.tform)
     self.edges = np.array(graph.edges)
-
+    
     while not pango.ShouldQuit():
       self.refresh()
 
-
+    
   def init(self):
     w, h = (1024,768)
     f = 2000 #420
@@ -51,6 +51,7 @@ class Viewer3D(object):
 
     pango.RegisterKeyPressCallback(ord('r'), self.optimize_callback)
     pango.RegisterKeyPressCallback(ord('t'), self.switch_callback)
+
   def refresh(self):
     #clear and activate screen
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)

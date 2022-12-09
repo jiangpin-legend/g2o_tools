@@ -5,7 +5,9 @@ import sys
 import g2o
 import numpy as np
 
-from viewer import *
+from viewer import Viewer3D
+from multi_viewer import MultiViewer3D
+
 from g2o_tool import G2oTool
 
 class PoseGraph3D(object):
@@ -28,19 +30,25 @@ class PoseGraph3D(object):
     print("vertices: ", len(self.optimizer.vertices()))
     print("edges: ", len(self.optimizer.edges()))
 
-    self.edges_key_pairs = self.g2o_tool.read_edge_keys(fname)
+    # self.edges_key_pairs = self.g2o_tool.read_edge_keys(fname)
+    self.edges_key_pairs = []
 
     for edge in self.optimizer.edges():
       self.edges.append([edge.vertices()[0].estimate().matrix(), edge.vertices()[1].estimate().matrix()])
+      self.edges_key_pairs.append([edge.vertices()[0].id(),edge.vertices()[1].id()])
 
     self.nodes = np.array([i.estimate().matrix() for i in self.optimizer.vertices().values()])
-    self.nodes_keys = self.optimizer.vertices().keys()
-    
+    self.nodes_keys = [key for key in self.optimizer.vertices().keys()]
+
     self.nodes = np.array(self.nodes)
     self.edges = np.array(self.edges)
     self.nodes_keys = np.array(self.nodes_keys)
     self.edges_key_pairs = np.array(self.edges_key_pairs)
+    print(len(self.edges_key_pairs))
     
+    # print(self.nodes_keys)
+    # print(self.edges_key_pairs)
+
     # self.nodes_keys = np.array(self.nodes_keys)
     # print(self.nodes_keys)
     # print(self.edges_key_pairs)
@@ -62,8 +70,9 @@ if __name__ == "__main__":
   if len(sys.argv) > 1:
     gfile = str(sys.argv[1])
   else:
-    # gfile = "/home/jiangpin/dataset/example_4robots/two_stage_centralized.g2o"
-    gfile = "./data/sphere2500.g2o"
+    # gfile = "/home/jiangpin/dataset/example_4robots/3_renamed.g2o"
+    gfile = "/home/jiangpin/dataset/example_4robots/full_graph_renamed.g2o"
+    # gfile = "./data/sphere2500.g2o"
 
     
 
@@ -72,7 +81,7 @@ if __name__ == "__main__":
   graph.load_file(gfile)
   #graph.optimize()
   print("loaded")
-  # viewer = Viewer3D(graph)
+  viewer = MultiViewer3D(graph,4)
 
   # graph.optimize()
   # viewer = Viewer3D(graph)

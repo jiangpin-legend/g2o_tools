@@ -6,6 +6,7 @@ import pangolin as pango
 import numpy as np
 import OpenGL.GL as gl
 
+from multi_robot_tools import MultiRobotTools
 
 class MultiViewer3D(object):
   '''
@@ -18,15 +19,19 @@ class MultiViewer3D(object):
                     [1.0, 0.0, 0.0, 0.0],
                     [0.0, 1.0, 0.0, 0.0],
                     [0.0, 0.0, 0.0, 1.0]])
-  def __init__(self, graph):
+  def __init__(self, graph,robot_num):
     self.init()
+    self.color_init()
     self.graph = graph
     self.nodes = np.dot(graph.nodes, self.tform)
     self.edges = np.array(graph.edges)
-
+    self.robot_num = robot_num
+    self.nodes_keys = np.array(graph.nodes_keys)
+    self.edges_key_pairs = np.array(graph.edges_key_pairs)
+    self.multi_robot_tools = MultiRobotTools()
+    self.partition_graph_np()
     while not pango.ShouldQuit():
       self.refresh()
-
 
   def init(self):
     w, h = (1024,768)
@@ -51,7 +56,13 @@ class MultiViewer3D(object):
 
     pango.RegisterKeyPressCallback(ord('r'), self.optimize_callback)
     pango.RegisterKeyPressCallback(ord('t'), self.switch_callback)
-    
+
+  def color_init(self):
+    color_list = [[255,69,0],[255,215,0],[0,255,127],[0,191,255],[138,43,226]]
+    self.color_list = color_list
+    self.separator_node_color = [244,164,96]
+    self.separator_edge_color = [255,250,205]
+
   def refresh(self):
     #clear and activate screen
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
@@ -59,18 +70,83 @@ class MultiViewer3D(object):
     #gl.glClearColor(1.0, 1.0, 1.0, 0.0)
 
     self.dcam.Activate(self.scam)
+    if len(self.separator_nodes) >1:
+        gl.glColor3f(self.separator_node_color[0]/255.0, self.separator_node_color[1]/255.0, self.separator_node_color[2]/255.0)
+        pango.DrawCameras(self.separator_nodes)
+    if len(self.separator_edges) >1:
+        gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
+        pango.DrawLines(self.separator_edges[:,0,:-1, -1], self.separator_edges[:,1,:-1,-1])
+        
+    for robot_id in range(self.robot_num):
+      edge_color = self.color_list[robot_id]
+      nodes = self.nodes_dict[robot_id]
+      edges = self.edges_dict[robot_id]
 
-    # render
-    gl.glLineWidth(1)
-    # render cameras
-    if len(self.nodes) > 1:
-      gl.glColor3f(1.0, 1.0, 1.0)
-      pango.DrawCameras(self.nodes)
-    # render edges
-    if len(self.edges) > 1:
-      gl.glColor3f(0.0, 0.8, 0.5)
-      pango.DrawLines(self.edges[:,0,:-1, -1], self.edges[:,1,:-1,-1])
+      # render
+      gl.glLineWidth(1)
+      # render cameras
+      if len(nodes) > 1:
+        gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
+        # gl.glColor3f(1.0, 1.0, 1.0)
+
+        pango.DrawCameras(nodes)
+      # render edges
+      if len(edges) > 1:
+        gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
+        pango.DrawLines(edges[:,0,:-1, -1], edges[:,1,:-1,-1])
+
+   
     pango.FinishFrame()
+
+  def partition_graph_np(self):
+    self.nodes_dict = {}
+    self.edges_dict = {}
+
+    for robot_id in range(self.robot_num):
+      node_id_mask = np.array([self.multi_robot_tools.key2robot_id_g2o(key)==robot_id for key in self.nodes_keys])
+      # node_id_mask = np.array([self.multi_robot_tools.key2robot_id_g2o(key) for key in self.nodes_keys])
+      # node_id_mask = np.array([key for key in self.nodes_keys])
+
+      # print(node_id_mask)
+      
+      self.nodes_dict[robot_id] = self.nodes[node_id_mask]
+
+      node_key = self.nodes_keys[node_id_mask]
+
+      # print("----------node_key---------------")
+      # print("----------robot"+str(robot_id)+'-----------')
+      # print(node_key)
+
+
+      edge_id_mask = np.array([ (self.multi_robot_tools.key2robot_id_g2o(key_pair[0]) ==robot_id or self.multi_robot_tools.key2robot_id_g2o(key_pair[1])==robot_id)
+                               for key_pair in self.edges_key_pairs])
+
+      edges_key_pairs = self.edges_key_pairs[edge_id_mask]
+
+      # print("----------edge_key---------------")
+      # print("----------robot"+str(robot_id)+'-----------')
+      # print(edges_key_pairs)
+
+      self.edges_dict[robot_id] = self.edges[edge_id_mask]
+
+      
+      separator_key = np.array( [key_pair for key_pair in self.edges_key_pairs if (self.multi_robot_tools.key2robot_id_g2o(key_pair[0])!=self.multi_robot_tools.key2robot_id_g2o(key_pair[1])) ] )
+      separator_edge_mask = []
+
+      separator_edge_mask = np.array([ (self.multi_robot_tools.is_separator_g2o(key_pair)) for key_pair in self.edges_key_pairs])
+
+      separator_node_key = []
+      for key_pair in separator_key:
+        separator_node_key.append(key_pair[0])
+        separator_node_key.append(key_pair[1])
+      separator_node_key = np.array(separator_node_key)
+      separator_node_key = np.unique(separator_node_key)
+
+      separator_node_mask = np.isin(self.nodes_keys,separator_node_key)
+
+      # print(separator_node_mask)
+      self.separator_edges = self.edges[separator_edge_mask]
+      self.separator_nodes = self.nodes[separator_node_mask]
 
   def update(self, graph=None):
     '''
