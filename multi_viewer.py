@@ -60,8 +60,8 @@ class MultiViewer3D(object):
   def color_init(self):
     color_list = [[255,69,0],[255,215,0],[0,255,127],[0,191,255],[138,43,226]]
     self.color_list = color_list
-    self.separator_node_color = [244,164,96]
-    self.separator_edge_color = [255,250,205]
+    self.separator_edge_color = [244,164,96]
+    self.separator_node_color = [255,250,205]
 
   def refresh(self):
     #clear and activate screen
@@ -76,7 +76,7 @@ class MultiViewer3D(object):
     if len(self.separator_edges) >1:
         gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
         pango.DrawLines(self.separator_edges[:,0,:-1, -1], self.separator_edges[:,1,:-1,-1])
-        
+
     for robot_id in range(self.robot_num):
       edge_color = self.color_list[robot_id]
       nodes = self.nodes_dict[robot_id]
