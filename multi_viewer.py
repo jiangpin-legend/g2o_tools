@@ -29,6 +29,9 @@ class MultiViewer3D(object):
     self.nodes_keys = np.array(graph.nodes_keys)
     self.edges_key_pairs = np.array(graph.edges_key_pairs)
     self.multi_robot_tools = MultiRobotTools()
+    self.separator_edges = self.graph.separator_edges 
+    self.separator_nodes = np.dot(self.graph.separator_nodes,self.tform)
+    
     self.partition_graph_np()
     while not pango.ShouldQuit():
       self.refresh()
@@ -71,11 +74,13 @@ class MultiViewer3D(object):
 
     self.dcam.Activate(self.scam)
     if len(self.separator_nodes) >1:
-        gl.glColor3f(self.separator_node_color[0]/255.0, self.separator_node_color[1]/255.0, self.separator_node_color[2]/255.0)
-        pango.DrawCameras(self.separator_nodes)
+      gl.glLineWidth(2)
+      gl.glColor3f(self.separator_node_color[0]/255.0, self.separator_node_color[1]/255.0, self.separator_node_color[2]/255.0)
+      pango.DrawCameras(self.separator_nodes)
     if len(self.separator_edges) >1:
-        gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
-        pango.DrawLines(self.separator_edges[:,0,:-1, -1], self.separator_edges[:,1,:-1,-1])
+      gl.glLineWidth(3)
+      gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
+      pango.DrawLines(self.separator_edges[:,0,:-1, -1], self.separator_edges[:,1,:-1,-1])
 
     for robot_id in range(self.robot_num):
       edge_color = self.color_list[robot_id]
@@ -129,24 +134,6 @@ class MultiViewer3D(object):
 
       self.edges_dict[robot_id] = self.edges[edge_id_mask]
 
-      
-      separator_key = np.array( [key_pair for key_pair in self.edges_key_pairs if (self.multi_robot_tools.key2robot_id_g2o(key_pair[0])!=self.multi_robot_tools.key2robot_id_g2o(key_pair[1])) ] )
-      separator_edge_mask = []
-
-      separator_edge_mask = np.array([ (self.multi_robot_tools.is_separator_g2o(key_pair)) for key_pair in self.edges_key_pairs])
-
-      separator_node_key = []
-      for key_pair in separator_key:
-        separator_node_key.append(key_pair[0])
-        separator_node_key.append(key_pair[1])
-      separator_node_key = np.array(separator_node_key)
-      separator_node_key = np.unique(separator_node_key)
-
-      separator_node_mask = np.isin(self.nodes_keys,separator_node_key)
-
-      # print(separator_node_mask)
-      self.separator_edges = self.edges[separator_edge_mask]
-      self.separator_nodes = self.nodes[separator_node_mask]
 
   def update(self, graph=None):
     '''
