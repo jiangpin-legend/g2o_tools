@@ -4,11 +4,13 @@ import sys
 
 import g2o
 import numpy as np
+from sophus import *
 
 from viewer import Viewer3D
 from multi_viewer import MultiViewer3D
 from multi_robot_tools import MultiRobotTools
 from g2o_tool import G2oTool
+
 
 class PoseGraph3D(object):
   nodes = []
@@ -48,6 +50,7 @@ class PoseGraph3D(object):
     self.nodes_keys = np.array(self.nodes_keys)
     self.edges_key_pairs = np.array(self.edges_key_pairs)
     self.init_separator()
+    print(self.separator_nodes.shape)
 
     print(len(self.edges_key_pairs))
     
@@ -87,8 +90,20 @@ class PoseGraph3D(object):
     separator_node_mask = np.isin(self.nodes_keys,separator_node_key)
 
     # print(separator_node_mask)
-    self.separator_edges = self.edges[separator_edge_mask]
-    self.separator_nodes = self.nodes[separator_node_mask]
+    self.separator_edges = np.array(self.edges[separator_edge_mask])
+    self.separator_nodes = np.array(self.nodes[separator_node_mask])
+
+  def linearize(self,poses,linearize_point):
+    R_ref = np.matrix(linearize_point[0:3,0:3])
+    R_ref_inv = R_ref.getI()
+    linearize_pose = []
+    for pose in poses:
+      rot = np.matrix(pose[0:3,0:3])
+      rot_ref = np.dot(rot,R_ref_inv)
+      linearize_rot = np.array(SO3(rot_ref).log())
+      linearize_pose.append(np.concatenate(linearize_point[0:2,3],linearize_rot))
+    linearize_pose = np.array(linearize_pose)
+    
 
 if __name__ == "__main__":
   if len(sys.argv) > 1:

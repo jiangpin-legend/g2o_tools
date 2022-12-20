@@ -7,6 +7,7 @@ class G2oTool:
         self.edge = {}
     
     def read(self,file_name):
+        self.file_name = file_name
         vertex = {}
         edge = {}
         with open(file_name,'r') as g2o_file:
@@ -15,12 +16,13 @@ class G2oTool:
                     g2o__line = each_line.split(' ')
                     identifier= g2o__line[0]
                     if identifier == 'VERTEX_SE3:QUAT':
-                        vertex[g2o__line[1]] = (g2o__line[2:-1])
+                        vertex[g2o__line[1]] = (g2o__line[2:])
                     elif identifier=='EDGE_SE3:QUAT':
-                        edge[(g2o__line[1],g2o__line[2])] = (g2o__line[3:-1])
+                        edge[(g2o__line[1],g2o__line[2])] = (g2o__line[3:])
                 except ValueError:
                     pass
-        
+        self.vertex = vertex
+        self.edge = edge
         return vertex,edge
     
     def read_edge_keys(self,file_name):
@@ -72,7 +74,7 @@ class G2oTool:
             line =line+key
             for each in data:
                 line = line+' '+each
-            line += '\n'
+            # line += '\n'
             vertex_lines.append(line)
         return vertex_lines
 
@@ -84,15 +86,74 @@ class G2oTool:
             edge_line += key_pair[0]+' '+key_pair[1]
             for each in data:
                 edge_line = edge_line+' '+each
-            edge_line += '\n'
+            # edge_line += '\n'
             edge_lines.append(edge_line)
         return edge_lines
 
+    def is_separator(self,key_pair):
+        key0 = key_pair[0]
+        key1 = key_pair[1]
+        id0  = self.key2robot_id(key0)
+        id1  = self.key2robot_id(key1)
+        return id0 != id1
+
+    def is_separator_g2o(self,key_pair):
+        key0 = key_pair[0]
+        key1 = key_pair[1]
+        id0  = self.key2robot_id_g2o(key0)
+        id1  = self.key2robot_id_g2o(key1)
+        return id0!=id1
+
+    def key2robot_id(self,key):
+        robot_id = int(key)//100000000000000000
+        robot_id -= 69
+        return robot_id
+
+    def key2robot_id_g2o(self,key):
+        robot_id = int(key)//1000000
+        robot_id-=1
+        return robot_id
+
+    def id_gtsam2g2o(self,key):
+        #rename the id in gtsam so that g2o can handle
+        # (id in gtsam is too long)
+        key = int(key)
+        robot_id = self.key2robot_id(key)
+        result =key//1000000
+        #10^6
+        robot_id+=1
+        new_key = robot_id*1000000+key-result*1000000
+        return str(new_key)
+
+    def rename_id(self):
+        renamed_vertex = {}
+        for key in self.vertex.keys():
+            new_key = self.id_gtsam2g2o(key)
+            renamed_vertex[new_key] = self.vertex[key]
+
+        renamed_edge = {}
+        for key_pair in self.edge.keys():
+            new_key0 = self.id_gtsam2g2o(key_pair[0])
+            new_key1 = self.id_gtsam2g2o(key_pair[1])
+            new_key_pair = (new_key0,new_key1)
+            renamed_edge[new_key_pair] = self.edge[key_pair]
+        base_name = self.file_name.split('.')
+        # print(base_name)
+        file_name = base_name[0]+'_renamed.g2o'
+        self.write_dict(file_name,renamed_vertex,renamed_edge)
+        
+
+
 if __name__ == '__main__':
     g2o_tool = G2oTool()
-    vertex,edge = g2o_tool.read('/home/jiangpin/dataset/example_4robots/0.g2o')
-    edge_keys = g2o_tool.read_edge_keys('/home/jiangpin/dataset/example_4robots/0.g2o')
+    # vertex,edge = g2o_tool.read('/home/jiangpin/dataset/example_4robots/0.g2o')
+    vertex,edge = g2o_tool.read('/home/jiangpin/dataset/new_4robots/0.g2o')
+
+    g2o_tool.rename_id()
+    # vertex,edge = g2o_tool.read('/home/jiangpin/dataset/example_4robots/0.g2o')
+
+    # edge_keys = g2o_tool.read_edge_keys('/home/jiangpin/dataset/example_4robots/0.g2o')
 
     # print(vertex)
     # print()
-    print(edge_keys)
+    # print(edge_keys)
