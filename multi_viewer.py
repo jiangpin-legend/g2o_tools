@@ -73,6 +73,7 @@ class MultiViewer3D(object):
     #gl.glClearColor(1.0, 1.0, 1.0, 0.0)
 
     self.dcam.Activate(self.scam)
+    #draw separator
     if len(self.separator_nodes) >1:
       gl.glLineWidth(2)
       gl.glColor3f(self.separator_node_color[0]/255.0, self.separator_node_color[1]/255.0, self.separator_node_color[2]/255.0)

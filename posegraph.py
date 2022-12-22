@@ -110,7 +110,20 @@ if __name__ == "__main__":
     gfile = str(sys.argv[1])
   else:
     # gfile = "/home/jiangpin/dataset/example_4robots/3_renamed.g2o"
-    gfile = "/home/jiangpin/dataset/example_4robots/full_graph_renamed.g2o"
+    # gfile = "/home/jiangpin/dataset/example_4robots/full_graph_renamed.g2o"
+    # gfile = "/home/jiangpin/dataset/simulation/example_4robots/full_graph_renamed.g2o"
+    # gfile = "/home/jiangpin/dataset/simulation/example_4robots/fullGraph_optimized_renamed.g2o"
+    # gfile = "/home/jiangpin/dataset/new_4robots/0_separator_optimized.g2o"
+    # gfile = "/home/jiangpin/dataset/new_4robots/1_separator_optimized.g2o"
+    # gfile = "/home/jiangpin/dataset/new_4robots/2_separator_optimized.g2o"
+    gfile = "/home/jiangpin/dataset/new_4robots/3_separator_optimized.g2o"
+    gfile = "/home/jiangpin/dataset/new_4robots/full_graph_optimized.g2o"
+
+    # gfile = "/home/jiangpin/dataset/new_4robots/separator.g2o"
+    # gfile = "/home/jiangpin/dataset/new_4robots/two_stage_centralized.g2o"
+
+
+
     # gfile = "./data/sphere2500.g2o"
 
     

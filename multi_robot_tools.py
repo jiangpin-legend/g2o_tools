@@ -25,6 +25,11 @@ class Separator():
         self.vertex[key_pair[1]] = vertex1
         self.edge[key_pair] = edge
 
+    def add_vertex(self,key,vertex):
+        pass
+
+    def add_edge(self,key_pair,edge):
+        self.edge[key_pair] = edge
 
 class MultiRobotTools():
     def __init__(self,data_dir=None,robot_num=0) -> None:
@@ -175,6 +180,14 @@ class MultiRobotTools():
                         vertex1 = self.vertex_dict[id1][key_pair[1]]
                         edge = edge_dict[key_pair]
                         self.separator.add(key_pair,vertex0,vertex1,edge)
+
+            for key_0 in self.separator.vertex.keys():
+                for key_1 in self.separator.vertex.keys():
+                    if(key_0!=key_1):
+                        key_pair = (key_0,key_1)
+                        if key_pair in edge_dict.keys():
+                            self.separator.add_edge(key_pair,edge_dict[key_pair])
+
         file_name = os.path.join(self.data_dir,'separator'+'.g2o')
         self.g2o_tool.write_dict(file_name,self.separator.vertex,self.separator.edge)
 
@@ -207,10 +220,12 @@ class MultiRobotTools():
 if __name__ == '__main__':
     # data_dir = '/home/jiangpin/dataset/test_4robots'
     data_dir = "/home/jiangpin/dataset/new_4robots/"
+    # data_dir = "/home/jiangpin/dataset/simulation/example_4robots/"
+
     num = 4
     multi_robot_tools = MultiRobotTools(data_dir,num)
-    # multi_robot_tools.rename_gtsam_id()
     multi_robot_tools.read_g2o()
+    # multi_robot_tools.rename_gtsam_id()
     multi_robot_tools.aggregate_graph()
     multi_robot_tools.spread_separator()
     multi_robot_tools.graph_info()

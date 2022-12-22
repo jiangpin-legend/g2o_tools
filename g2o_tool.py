@@ -35,7 +35,7 @@ class G2oTool:
                     if identifier == 'VERTEX_SE3:QUAT':
                         pass
                     elif identifier=='EDGE_SE3:QUAT':
-                        edge_keys.append([int(g2o__line[1]),int(g2o__line[2])])
+                        edge_keys.append((int(g2o__line[1]),int(g2o__line[2])))
                 except ValueError:
                     pass
         return edge_keys
