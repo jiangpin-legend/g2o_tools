@@ -19,7 +19,8 @@ class MultiViewer3D(object):
                     [1.0, 0.0, 0.0, 0.0],
                     [0.0, 1.0, 0.0, 0.0],
                     [0.0, 0.0, 0.0, 1.0]])
-  def __init__(self, graph,robot_num):
+  def __init__(self, graph,robot_num,file_name='g2o_stuff'):
+    self.file_name = file_name
     self.init()
     self.color_init()
     self.graph = graph
@@ -31,7 +32,6 @@ class MultiViewer3D(object):
     self.multi_robot_tools = MultiRobotTools()
     self.separator_edges = self.graph.separator_edges 
     self.separator_nodes = np.dot(self.graph.separator_nodes,self.tform)
-    
     self.partition_graph_np()
     while not pango.ShouldQuit():
       self.refresh()
@@ -40,9 +40,9 @@ class MultiViewer3D(object):
     w, h = (1024,768)
     f = 2000 #420
 
-    pango.CreateWindowAndBind("g2o_stuff", w, h)
+    pango.CreateWindowAndBind(self.file_name , w, h)
     gl.glEnable(gl.GL_DEPTH_TEST)
-
+    self.camera_size=0.2
     # Projection and ModelView Matrices
     self.scam = pango.OpenGlRenderState(
         pango.ProjectionMatrix(w, h, f, f, w //2, h//2, 0.1, 100000),
@@ -77,7 +77,8 @@ class MultiViewer3D(object):
     if len(self.separator_nodes) >1:
       gl.glLineWidth(2)
       gl.glColor3f(self.separator_node_color[0]/255.0, self.separator_node_color[1]/255.0, self.separator_node_color[2]/255.0)
-      pango.DrawCameras(self.separator_nodes)
+      pango.DrawCameras(self.separator_nodes,self.camera_size)
+      
     if len(self.separator_edges) >1:
       gl.glLineWidth(3)
       gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
@@ -89,13 +90,14 @@ class MultiViewer3D(object):
       edges = self.edges_dict[robot_id]
 
       # render
-      gl.glLineWidth(1)
       # render cameras
+      gl.glLineWidth(1)
       if len(nodes) > 1:
         gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
         # gl.glColor3f(1.0, 1.0, 1.0)
 
-        pango.DrawCameras(nodes)
+        pango.DrawCameras(nodes,self.camera_size)
+      
       # render edges
       if len(edges) > 1:
         gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
