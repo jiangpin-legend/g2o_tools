@@ -142,14 +142,28 @@ class G2oTool:
         file_name = base_name[0]+'_renamed.g2o'
         self.write_dict(file_name,renamed_vertex,renamed_edge)
         
+    def indentify_orentation(self):
+        for key in self.edge.keys():
+            value = self.edge[key]
+            value[3] = '0'
+            value[4] = '0'
+            value[5] = '0'
+            value[6] = '1'
 
+            self.edge[key] = value
+            
+        base_name = self.file_name.split('.')
+        file_name = base_name[0]+'_identity.g2o'
+        self.write_dict(file_name,self.vertex,self.edge)
+        
 
 if __name__ == '__main__':
     g2o_tool = G2oTool()
     # vertex,edge = g2o_tool.read('/home/jiangpin/dataset/example_4robots/0.g2o')
-    vertex,edge = g2o_tool.read('/home/jiangpin/dataset/new_4robots/0.g2o')
-
-    g2o_tool.rename_id()
+    # vertex,edge = g2o_tool.read('/home/jiangpin/dataset/new_4robots/0.g2o')
+    _,_ = g2o_tool.read('/home/jiangpin/dataset/2yuan_test/full_graph.g2o')
+    # g2o_tool.rename_id()
+    # g2o_tool.indentify_orentation()
     # vertex,edge = g2o_tool.read('/home/jiangpin/dataset/example_4robots/0.g2o')
 
     # edge_keys = g2o_tool.read_edge_keys('/home/jiangpin/dataset/example_4robots/0.g2o')

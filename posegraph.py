@@ -181,6 +181,10 @@ if __name__ == "__main__":
     # gfile = '/home/jiangpin/dataset/3dog/1_separator.g2o'
     # gfile = '/home/jiangpin/dataset/3dog/2_separator.g2o'
 
+    gfile = '/home/jiangpin/dataset/3dog/0_separator_optimized.g2o'
+    gfile = '/home/jiangpin/dataset/3dog/1_separator_optimized.g2o'
+    gfile = '/home/jiangpin/dataset/3dog/2_separator_optimized.g2o'
+
 
 
     # gfile = "/home/jiangpin/dataset/3dog/full_graph_renamed_optimized.g2o"
@@ -206,7 +210,7 @@ if __name__ == "__main__":
 
     # gfile = '/home/jiangpin/dataset/2yuan_new/1_separator_optimized.g2o'
     # gfile = '/home/jiangpin/dataset/2yuan_new/full_graph.g2o'
-    gfile = '/home/jiangpin/dataset/2yuan_new/full_graph_separator.g2o'
+    # gfile = '/home/jiangpin/dataset/2yuan_new/full_graph_separator.g2o'
 
     # gfile = '/home/jiangpin/dataset/2yuan_test/full_graph.g2o'
 

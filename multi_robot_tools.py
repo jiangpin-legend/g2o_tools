@@ -9,6 +9,8 @@ from math import sqrt
 import g2o
 import numpy as np
 from sophus import SE3
+from pyquaternion import Quaternion
+
 from g2o_tool import G2oTool
 from dijkstra import dijkstra,shortest_path
 
@@ -219,6 +221,26 @@ class MultiRobotTools():
                     edge_dict[robot_id].update({key_pair:edge[key_pair]})
             self.g2o_tool.write_dict(base_name+str(robot_id)+'.g2o',vertex_dict[robot_id],edge_dict[robot_id])
 
+    def partition_graph_g2o(self,file_name):
+            vertex,edge = self.g2o_tool.read(file_name)
+            base_name_list = file_name.split('/')
+            base_name = ''
+            for i in range(len(base_name_list)-1):
+                base_name =base_name+base_name_list[i]+'/'
+            vertex_dict = {}
+            edge_dict = {}
+            
+            for robot_id in range(self.robot_num):
+                vertex_dict[robot_id] = {}
+                edge_dict[robot_id] = {}
+                for key in vertex.keys():
+                    if(self.key2robot_id_g2o(key)==robot_id):
+                        vertex_dict[robot_id].update({key:vertex[key]})
+                for key_pair in edge.keys():
+                    if(self.key2robot_id_g2o(key_pair[0])==robot_id or self.key2robot_id_g2o(key_pair[1])==robot_id):
+                        edge_dict[robot_id].update({key_pair:edge[key_pair]})
+                self.g2o_tool.write_dict(base_name+str(robot_id)+'.g2o',vertex_dict[robot_id],edge_dict[robot_id])
+
     def aggregate_separator(self):
         for each_robot in self.edge_dict.keys():
             edge_dict = self.edge_dict[each_robot]
@@ -326,18 +348,7 @@ class MultiRobotTools():
         self.graph_robot = graph_robot
         # print(graph)
     
-    def connect_separator_single(self,robot_id,edge_dict):
-        # path_dict = {}
-        # for key1 in self.separator.vertex.keys():
-        #     for key2 in self.separator.vertex.keys():
-        #         if(key1!=key2):
-        #             if( not((key2,key1) in path_dict.keys()) ):
-        #                 path = shortest_path(self.graph,key1,key2)
-        #                 path_dict[(key1,key2)] = path
-        # with open('./path.pkl','wb') as f:
-        #     pickle.dump(path_dict,file=f)
-
-        
+    def connect_separator_single(self,robot_id,edge_dict):        
         vertex = self.separator.vertex
         key_list = list(vertex.keys())
         # print(key_list)
@@ -357,13 +368,20 @@ class MultiRobotTools():
                                     [0,0,0,1]])
                     for key in range(int(key0),int(key1)):
                         measurement = self.edge_measure_dict[(key,key+1)]
-                        m = np.dot(measurement,m)
-                        # m = np.dot(m,measurement)
+                        # m = np.dot(measurement,m)
+                        m = np.dot(m,measurement)
 
 
                     #add separator odometry
                     key_pair = (key0,key1)
-                    quaternion= self.matrix_to_quaternion(m[0:3,0:3])
+                    q = Quaternion(matrix=m)
+                    quaternion = [0,0,0,0]
+                    quaternion[0] = q.x
+                    quaternion[1] = q.y
+                    quaternion[2] = q.z
+                    quaternion[3] = q.w
+
+                    # quaternion= self.matrix_to_quaternion(m[0:3,0:3])
                     translation =[0,0,0]
                     translation[0] = m[0,3]
                     translation[1] = m[1,3]
@@ -512,12 +530,14 @@ class MultiRobotTools():
 if __name__ == '__main__':
     # data_dir = '/home/jiangpin/dataset/test_4robots'
     data_dir = "/home/jiangpin/dataset/new_4robots/"
-    # data_dir = "/home/jiangpin/dataset/3dog/"
-    data_dir = "/home/jiangpin/dataset/2yuan_new/"
+    data_dir = "/home/jiangpin/dataset/3dog/"
+    # data_dir = "/home/jiangpin/dataset/2yuan_new/"
+    # data_dir = "/home/jiangpin/dataset/2yuan_test/"
+
 
     # data_dir = "/home/jiangpin/dataset/simulation/example_4robots/"
 
-    num = 2
+    num = 3
     # multi_robot_tools = MultiRobotTools(data_dir,num)
     # multi_robot_tools.read_g2o()
     # multi_robot_tools.rename_gtsam_id()
