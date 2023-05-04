@@ -5,7 +5,7 @@ import pickle
 
 import g2o
 import numpy as np
-from sophus import *
+# from sophus import *
 
 from viewer import Viewer3D
 from multi_viewer import MultiViewer3D
@@ -103,8 +103,17 @@ class PoseGraph3D(object):
       dir_name = dir_name+'/'+ch
     return dir_name
 
-  def optimize(self, iterations=1):
+  def initial_guess(self):
     self.optimizer.initialize_optimization()
+    self.edges_optimized = []
+    for edge in self.optimizer.edges():
+      self.edges_optimized.append([edge.vertices()[0].estimate().matrix(), edge.vertices()[1].estimate().matrix()])
+
+    self.nodes_optimized = np.array([i.estimate().matrix() for i in self.optimizer.vertices().values()])
+    self.nodes_optimized = np.array(self.nodes_optimized)
+    self.edges_optimized = np.array(self.edges_optimized)
+    
+  def optimize(self, iterations=1):
     self.optimizer.optimize(iterations)
 
     self.optimizer.save("data/out.g2o")
@@ -154,74 +163,22 @@ if __name__ == "__main__":
   if len(sys.argv) > 1:
     gfile = str(sys.argv[1])
   else:
-    # gfile = "/home/jiangpin/dataset/example_4robots/3_renamed.g2o"
-    # gfile = "/home/jiangpin/dataset/example_4robots/full_graph_renamed.g2o"
-    # gfile = "/home/jiangpin/dataset/simulation/example_4robots/full_graph_renamed.g2o"
-    # gfile = "/home/jiangpin/dataset/simulation/example_4robots/fullGraph_optimized_renamed.g2o"
-    # gfile = "/home/jiangpin/dataset/new_4robots/0_separator_optimized.g2o"
-    # gfile = "/home/jiangpin/dataset/new_4robots/1_separator_optimized.g2o"
-    # gfile = "/home/jiangpin/dataset/new_4robots/2_separator_optimized.g2o"
-    # gfile = "/home/jiangpin/dataset/new_4robots/3_separator_optimized.g2o"
-    # gfile = "/home/jiangpin/dataset/new_4robots/separator.g2o"
-
-    # gfile = "/home/jiangpin/dataset/new_4robots/full_graph_optimized.g2o"
-    # gfile = "/home/jiangpin/dataset/3dog/full_graph_renamed.g2o"
-    # gfile = '/home/jiangpin/dataset/3dog/0_separator_optimized.g2o'
-    # gfile = '/home/jiangpin/dataset/3dog/1_separator_optimized.g2o'
-    # gfile = '/home/jiangpin/dataset/3dog/2_separator_optimized.g2o'
-    # gfile = '/home/jiangpin/dataset/3dog/fullGraph_optimized_renamed.g2o'
-    # gfile = '/home/jiangpin/dataset/3dog/full_graph.g2o'
-
-
-    
-    # gfile = '/home/jiangpin/dataset/3dog/full_graph.g2o'
-
-    # gfile = '/home/jiangpin/dataset/3dog/separator.g2o'
-    # gfile = '/home/jiangpin/dataset/3dog/0_separator.g2o'
-    # gfile = '/home/jiangpin/dataset/3dog/1_separator.g2o'
-    # gfile = '/home/jiangpin/dataset/3dog/2_separator.g2o'
-
-
-
-    # gfile = "/home/jiangpin/dataset/3dog/full_graph_renamed_optimized.g2o"
-
-    # gfile = "/home/jiangpin/dataset/new_4robots/separator.g2o" 
-    # gfile = "/home/jiangpin/dataset/new_4robots/two_stage_centralized.g2o"
-
-    # gfile = '/home/jiangpin/dataset/2yuan/readFullGraph_renamed.g2o'
-  
-
-    # gfile = "./data/sphere2500.g2o"
-    # gfile = '/home/jiangpin/graph/graph/readFullGraph_renamed.g2o'
-    # gfile = '/home/jiangpin/graph/0221/graph/readFullGraph_renamed.g2o'
-
-    # gfile = '/home/jiangpin/graph/0221/graph/optimized.g2o'
-    # gfile = '/home/jiangpin/dataset/2yuan_new/full_graph_renamed.g2o'
-
-    # gfile = '/home/jiangpin/dataset/2yuan_new/separator.g2o'
-    # gfile = '/home/jiangpin/dataset/2yuan_new/0_separator.g2o'
-    # gfile = '/home/jiangpin/dataset/2yuan_new/1_separator.g2o'
-    # gfile = '/home/jiangpin/dataset/2yuan_new/0_separator_optimized.g2o'
-    # gfile = '/home/jiangpin/dataset/2yuan_new/0_separator_optimized_renamed.g2o'
-
-    # gfile = '/home/jiangpin/dataset/2yuan_new/1_separator_optimized.g2o'
-    # gfile = '/home/jiangpin/dataset/2yuan_new/full_graph.g2o'
     gfile = '/home/jiangpin/dataset/2yuan_new/full_graph_separator.g2o'
-
-    # gfile = '/home/jiangpin/dataset/2yuan_test/full_graph.g2o'
-
-
-
-
-    # gfile = '/home/jiangpin/graph/0221/graph/optimized_200.g2o'
-
-    # gfile = '/home/jiangpin/graph/graph/fullGraph_renamed.g2o'
-    # gfile = './data/out.g2o'
+    # gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/3_robot_full/fullGraph_optimized_renamed.g2o'
+    # gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/separator.g2o'
+    # gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/3_robot_full/afer_pcm_renamed.g2o'
+    gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/3_robot_full/afer_pcm_renamed.g2o'
+    gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/fullGraph_optimized_renamed.g2o'
+    gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/afer_pcm_renamed.g2o'
+    gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/before_pcm_renamed.g2o'
 
 
 
 
-    
+    # gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/3_robot_full/before_pcm_renamed.g2o'
+
+
+
 
 
   graph = PoseGraph3D(verbose=True,use_transform=False)

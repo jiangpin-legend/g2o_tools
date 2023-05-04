@@ -8,7 +8,7 @@ from math import sqrt
 
 import g2o
 import numpy as np
-from sophus import SE3
+# from sophus import SE3
 from g2o_tool import G2oTool
 from dijkstra import dijkstra,shortest_path
 
@@ -514,10 +514,12 @@ if __name__ == '__main__':
     data_dir = "/home/jiangpin/dataset/new_4robots/"
     # data_dir = "/home/jiangpin/dataset/3dog/"
     data_dir = "/home/jiangpin/dataset/2yuan_new/"
+    data_dir = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/'
+    
 
     # data_dir = "/home/jiangpin/dataset/simulation/example_4robots/"
 
-    num = 2
+    num = 3
     # multi_robot_tools = MultiRobotTools(data_dir,num)
     # multi_robot_tools.read_g2o()
     # multi_robot_tools.rename_gtsam_id()
