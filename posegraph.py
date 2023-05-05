@@ -5,7 +5,7 @@ import pickle
 
 import g2o
 import numpy as np
-from sophus import *
+# from sophus import *
 
 from viewer import Viewer3D
 from multi_viewer import MultiViewer3D
@@ -103,8 +103,17 @@ class PoseGraph3D(object):
       dir_name = dir_name+'/'+ch
     return dir_name
 
-  def optimize(self, iterations=1):
+  def initial_guess(self):
     self.optimizer.initialize_optimization()
+    self.edges_optimized = []
+    for edge in self.optimizer.edges():
+      self.edges_optimized.append([edge.vertices()[0].estimate().matrix(), edge.vertices()[1].estimate().matrix()])
+
+    self.nodes_optimized = np.array([i.estimate().matrix() for i in self.optimizer.vertices().values()])
+    self.nodes_optimized = np.array(self.nodes_optimized)
+    self.edges_optimized = np.array(self.edges_optimized)
+    
+  def optimize(self, iterations=1):
     self.optimizer.optimize(iterations)
 
     self.optimizer.save("data/out.g2o")
@@ -212,20 +221,16 @@ if __name__ == "__main__":
     # gfile = '/home/jiangpin/dataset/2yuan_new/full_graph.g2o'
     # gfile = '/home/jiangpin/dataset/2yuan_new/full_graph_separator.g2o'
 
-    # gfile = '/home/jiangpin/dataset/2yuan_test/full_graph.g2o'
+    gfile = '/home/jiangpin/dataset/2yuan_test/full_graph.g2o'
 
 
 
 
-    # gfile = '/home/jiangpin/graph/0221/graph/optimized_200.g2o'
 
-    # gfile = '/home/jiangpin/graph/graph/fullGraph_renamed.g2o'
-    # gfile = './data/out.g2o'
+    # gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/3_robot_full/before_pcm_renamed.g2o'
 
 
 
-
-    
 
 
   graph = PoseGraph3D(verbose=True,use_transform=False)

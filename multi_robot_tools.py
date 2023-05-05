@@ -8,7 +8,7 @@ from math import sqrt
 
 import g2o
 import numpy as np
-from sophus import SE3
+#from sophus import SE3
 from pyquaternion import Quaternion
 
 from g2o_tool import G2oTool
@@ -533,6 +533,7 @@ if __name__ == '__main__':
     data_dir = "/home/jiangpin/dataset/3dog/"
     # data_dir = "/home/jiangpin/dataset/2yuan_new/"
     # data_dir = "/home/jiangpin/dataset/2yuan_test/"
+
 
 
     # data_dir = "/home/jiangpin/dataset/simulation/example_4robots/"
