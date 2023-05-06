@@ -5,7 +5,7 @@ from multiprocessing import Process, Queue
 import pangolin as pango
 import numpy as np
 import OpenGL.GL as gl
-
+import OpenGL.GLUT as glut
 from multi_robot_tools import MultiRobotTools
 
 class MultiViewer3D(object):
@@ -42,31 +42,58 @@ class MultiViewer3D(object):
 
     pango.CreateWindowAndBind(self.file_name , w, h)
     gl.glEnable(gl.GL_DEPTH_TEST)
+    glut.glutInit()
     self.camera_size=0.2
+    self.viewpoint_x = 0
+    self.viewpoint_y = 0  
+    self.viewpoint_z = 100
+    self.viewpoint_f = 1000
     # Projection and ModelView Matrices
-    self.scam = pango.OpenGlRenderState(
-        pango.ProjectionMatrix(w, h, f, f, w //2, h//2, 0.1, 100000),
-        pango.ModelViewLookAt(0, -50.0, -10.0,
+    self.look_view = pango.ModelViewLookAt(self.viewpoint_x, self.viewpoint_y, self.viewpoint_z,
                               0.0, 0.0, 0.0,
-                              0.0, -1.0, 0.0))#pango.AxisDirection.AxisY))
+                              0.0, -1.0, 0.0)
+    self.scam = pango.OpenGlRenderState(
+        pango.ProjectionMatrix(w, h, self.viewpoint_f, self.viewpoint_f, w //2, h//2, 0.1, 100000),self.look_view
+      )#pango.AxisDirection.AxisY))
     self.handler = pango.Handler3D(self.scam)
-
+    
     # Interactive View in Window
     self.dcam = pango.CreateDisplay()
     self.dcam.SetBounds(0.0, 1.0, 0.0, 1.0, -w/h)
     panel = pango.CreatePanel('ui')
     panel.SetBounds(0.0, 1.0, 0.0, 180/640.)
+
+    self.axis = pango.Renderable()
+    # print(dir(tree))
+    # print(dir(pango.Axis()))
+    self.axis.Add(pango.Axis())
+    # def draw(view):
+    #     view.Activate(self.scam)
+    #     tree.Render()
+    # self.dcam.SetDrawFunction(draw)
     # self.rename_id = pango.VarString('ui.rename id', "10")
     # self.rename_id_dir = pango.VarString('ui.rename id dir', "10")
 
     self.reset_view_button = pango.VarBool('ui.Reset View', value=False, toggle=False)
+    self.show_grid = pango.VarBool('ui.Show Grid', value=True, toggle=True)
+    self.show_id = pango.VarBool('ui.Show Id', value=False, toggle=False)
+
+    self.show_g2o_id = pango.VarBool('ui.Show G2o Id', value=False, toggle=True)
+    self.show_gtsam_id = pango.VarBool('ui.Show Gtsam Id', value=False, toggle=True)
+
+    self.show_robot = pango.VarBool('ui.Show Robot', value=False, toggle=False)
 
     self.show_separator = pango.VarBool('ui.Show Separator', value=True, toggle=True)
     self.show_separator_only = pango.VarBool('ui.Only Show Separator', value=False, toggle=True)
+   
     self.show_robot_1 = pango.VarBool('ui.Show Robot 1', value=True, toggle=True)
     self.show_robot_2 = pango.VarBool('ui.Show Robot 2', value=True, toggle=True)
     self.show_robot_3 = pango.VarBool('ui.Show Robot 3', value=True, toggle=True)
     self.show_robot_4 = pango.VarBool('ui.Show Robot 4', value=True, toggle=True)
+
+    self.show_list = [self.show_robot_1,self.show_robot_2,self.show_robot_3,self.show_robot_4]
+
+
 
     self.rename_id_button = pango.VarBool('ui.Renameid', value=False, toggle=False)
     self.rename_id_dir_button = pango.VarBool('ui.Renameid Dir', value=False, toggle=False)
@@ -86,6 +113,7 @@ class MultiViewer3D(object):
     pango.RegisterKeyPressCallback(ord('r'), self.optimize_callback)
     pango.RegisterKeyPressCallback(ord('t'), self.switch_callback)
 
+    
   def color_init(self):
     color_list = [[255,69,0],[255,215,0],[0,255,127],[0,191,255],[138,43,226]]
     self.color_list = color_list
@@ -95,6 +123,7 @@ class MultiViewer3D(object):
   def refresh(self):
 
     if pango.Pushed(self.reset_view_button):
+      self.reset_view_callback()
       print("reset view")
     if pango.Pushed(self.rename_id_button):
       print("rename id")
@@ -109,45 +138,56 @@ class MultiViewer3D(object):
       print("optimize")
       self.optimize_button_callback()
 
-    
-
+ 
     #clear and activate screen
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     gl.glClearColor(0.15, 0.15, 0.15, 0.0)
+
     #gl.glClearColor(1.0, 1.0, 1.0, 0.0)
 
     self.dcam.Activate(self.scam)
-    #draw separator
-    # if len(self.separator_nodes) >1:
-    #   gl.glLineWidth(2)
-    #   gl.glColor3f(self.separator_node_color[0]/255.0, self.separator_node_color[1]/255.0, self.separator_node_color[2]/255.0)
-    #   pango.DrawCameras(self.separator_nodes,self.camera_size)
-      
-    # if len(self.separator_edges) >1:
-    #   gl.glLineWidth(3)
-    #   gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
-    #   pango.DrawLines(self.separator_edges[:,0,:-1, -1], self.separator_edges[:,1,:-1,-1])
 
+    gl.glLineWidth(3)
+    self.axis.Render()
+
+
+    if self.show_grid.Get():
+      gl.glLineWidth(1)
+      self.drawPlane()
+    
+    if self.show_separator.Get():
+      # draw separator
+      if len(self.separator_nodes) >1:
+        gl.glLineWidth(2)
+        gl.glColor3f(self.separator_node_color[0]/255.0, self.separator_node_color[1]/255.0, self.separator_node_color[2]/255.0)
+        pango.DrawCameras(self.separator_nodes,self.camera_size)
+        
+      if len(self.separator_edges) >1:
+        gl.glLineWidth(3)
+        gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
+        pango.DrawLines(self.separator_edges[:,0,:-1, -1], self.separator_edges[:,1,:-1,-1])
+    # pango.DrawText('Hello, world!', 20, 20)
     for robot_id in range(self.robot_num):
       edge_color = self.color_list[robot_id]
       nodes = self.nodes_dict[robot_id]
       edges = self.edges_dict[robot_id]
+      if self.show_list[robot_id].Get() and not self.show_separator_only.Get():
+        # render
+        # render cameras
+        gl.glLineWidth(1)
+        if len(nodes) > 1:
+          gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
+          # gl.glColor3f(1.0, 1.0, 1.0)
 
-      # render
-      # render cameras
-      gl.glLineWidth(1)
-      if len(nodes) > 1:
-        gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
-        # gl.glColor3f(1.0, 1.0, 1.0)
+          pango.DrawCameras(nodes,self.camera_size)
+        
+        # render edges
+        if len(edges) > 1:
+          gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
+          pango.DrawLines(edges[:,0,:-1, -1], edges[:,1,:-1,-1])
+    if(self.show_gtsam_id.Get() or self.show_g2o_id.Get()):
+      self.draw_vertex_key()
 
-        pango.DrawCameras(nodes,self.camera_size)
-      
-      # render edges
-      if len(edges) > 1:
-        gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
-        pango.DrawLines(edges[:,0,:-1, -1], edges[:,1,:-1,-1])
-
-   
     pango.FinishFrame()
 
   def partition_graph_np(self):
@@ -190,11 +230,28 @@ class MultiViewer3D(object):
     self.nodes = np.dot(self.graph.nodes_optimized, self.tform)
     self.edges = self.graph.edges_optimized
 
+  def drawPlane(self,num_divs=10, div_size=2):
+    # Plane parallel to x-z at origin with normal -y
+    minx = -num_divs*div_size
+    miny = -num_divs*div_size
+    maxx = num_divs*div_size
+    maxy = num_divs*div_size
+    #gl.glLineWidth(2)
+    #gl.glColor3f(0.7,0.7,1.0)
+    gl.glColor3f(0.7,0.7,0.7)
+    gl.glBegin(gl.GL_LINES)
+    for n in range(2*num_divs):
+        gl.glVertex3f(minx+div_size*n,miny,0)
+        gl.glVertex3f(minx+div_size*n,maxy,0)
+        gl.glVertex3f(minx,miny+div_size*n,0)
+        gl.glVertex3f(maxx,miny+div_size*n,0)
+    gl.glEnd()
 
   def optimize_callback(self):
     self.graph.optimize()
     self.is_optim = False
     self.switch_callback()
+
   def switch_callback(self):
     self.is_optim = ~self.is_optim
     if self.is_optim:
@@ -207,11 +264,43 @@ class MultiViewer3D(object):
       self.edges = self.graph.edges
 
   def init_guess_callback(self):
+    print(dir(pango))
     self.graph.initial_guess()
+    self.graph.update_key_position()
     self.update()
     self.partition_graph_np()
 
   def optimize_button_callback(self):
     self.graph.optimize(int(self.iterations.Get()))
+    self.graph.update_key_position()
     self.update()
     self.partition_graph_np()
+  
+  def reset_view_callback(self):
+    self.scam.SetModelViewMatrix(self.look_view)#pango.AxisDirection.AxisY))
+
+  def draw_text(self,position,text):
+    # pos_text = [0,0,0]
+    # name = 'Hello'
+    # gl.glDisable(gl.GL_LIGHTING)
+    # gl.glColor3f(0.0, 0.0, 0.0)
+    gl.glRasterPos3f(*position)
+    glut.glutBitmapString(glut.GLUT_BITMAP_HELVETICA_12,
+                          text.encode())
+    # gl.glEnable(gl.GL_LIGHTING)
+  
+  def draw_vertex_key(self):
+    for key, value in self.graph.key_node_dict.items():
+      robot_id = self.multi_robot_tools.key2robot_id_g2o(key)
+      if self.show_list[robot_id].Get():
+        
+        edge_color = self.color_list[robot_id]
+        gl.glColor3f(edge_color[0]/255.0, edge_color[1]/255.0, edge_color[2]/255.0)
+
+        edge_color = self.color_list[robot_id]
+
+        if self.show_g2o_id.Get():
+          self.draw_text(value,str(key))
+        elif self.show_gtsam_id.Get():
+          new_key =  self.multi_robot_tools.id_g2o2gtsam(key)
+          self.draw_text(value,str(new_key))

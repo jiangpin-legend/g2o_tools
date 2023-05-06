@@ -180,6 +180,14 @@ class MultiRobotTools():
         robot_id+=1
         new_key = robot_id*1000000+key-result*1000000
         return str(new_key)
+        
+    #work when each robot's vertex num is less than 1000
+    def id_g2o2gtsam(self,key):
+        gtsam_id = [6989586621679000000,7061644215716930000,7133701809754860000]
+        robot_id = self.key2robot_id_g2o(key)
+        result = gtsam_id[robot_id]+key%10000
+        return result
+    
     def is_renamed(file_name):
     #drop .g2o
         words = file_name.split('.')[0]

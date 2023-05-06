@@ -42,6 +42,8 @@ class PoseGraph3D(object):
     # self.edges_key_pairs = self.g2o_tool.read_edge_keys(fname)
     self.edges_key_pairs = []
     self.edges = []
+    self.key_node_dict = {}
+
     if (self.use_transform):
       self.init_transform(fname)
       for edge in self.optimizer.edges():
@@ -55,21 +57,27 @@ class PoseGraph3D(object):
         self.edges_key_pairs.append([edge.vertices()[0].id(),edge.vertices()[1].id()])
 
       self.nodes = []
+      self.key_node_dict = {}
+
       for key,value in zip(self.optimizer.vertices().keys(),self.optimizer.vertices().values()):
           robot_id = self.g2o_tool.key2robot_id_g2o(key)
           node = np.matmul(self.transform_list[robot_id],value.estimate().matrix())
+          position = [node[0,3],node[1,3],node[2,3]]
+          self.key_node_dict[key] = position
           self.nodes.append(node)
       
     else:
       for edge in self.optimizer.edges():
         self.edges.append([edge.vertices()[0].estimate().matrix(), edge.vertices()[1].estimate().matrix()])
         self.edges_key_pairs.append([edge.vertices()[0].id(),edge.vertices()[1].id()])
-
+      self.update_key_position()
       self.nodes = np.array([i.estimate().matrix() for i in self.optimizer.vertices().values()])
 
 
     self.nodes_keys = [key for key in self.optimizer.vertices().keys()]
 
+   
+    
     self.nodes = np.array(self.nodes)
     self.edges = np.array(self.edges)
     self.nodes_keys = np.array(self.nodes_keys)
@@ -103,6 +111,12 @@ class PoseGraph3D(object):
       dir_name = dir_name+'/'+ch
     return dir_name
 
+  def update_key_position(self):
+     for key,value in zip(self.optimizer.vertices().keys(),self.optimizer.vertices().values()):
+      node = value.estimate().matrix()
+      position = [node[0,3],node[1,3],node[2,3]]
+      self.key_node_dict[key] = position
+  
   def initial_guess(self):
     self.optimizer.initialize_optimization()
     self.edges_optimized = []
