@@ -30,7 +30,7 @@ class G2oTool:
         with open(file_name,'r') as g2o_file:
             for each_line in g2o_file:
                 try:
-                    g2o__line = each_line.split(' ')
+                    g2o__line = each_line.split('    ')
                     identifier= g2o__line[0]
                     if identifier == 'VERTEX_SE3:QUAT':
                         pass

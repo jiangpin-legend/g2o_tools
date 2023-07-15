@@ -9,7 +9,7 @@ from math import sqrt
 import g2o
 import numpy as np
 #from sophus import SE3
-from pyquaternion import Quaternion
+# from pyquaternion import Quaternion
 
 from g2o_tool import G2oTool
 from dijkstra import dijkstra,shortest_path

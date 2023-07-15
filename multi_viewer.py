@@ -147,7 +147,7 @@ class MultiViewer3D(object):
 
     self.dcam.Activate(self.scam)
 
-    gl.glLineWidth(3)
+    gl.glLineWidth(5)
     self.axis.Render()
 
 
@@ -167,6 +167,7 @@ class MultiViewer3D(object):
         gl.glColor3f(self.separator_edge_color[0]/255.0, self.separator_edge_color[1]/255.0, self.separator_edge_color[2]/255.0)
         pango.DrawLines(self.separator_edges[:,0,:-1, -1], self.separator_edges[:,1,:-1,-1])
     # pango.DrawText('Hello, world!', 20, 20)
+
     for robot_id in range(self.robot_num):
       edge_color = self.color_list[robot_id]
       nodes = self.nodes_dict[robot_id]
@@ -230,7 +231,7 @@ class MultiViewer3D(object):
     self.nodes = np.dot(self.graph.nodes_optimized, self.tform)
     self.edges = self.graph.edges_optimized
 
-  def drawPlane(self,num_divs=10, div_size=2):
+  def drawPlane(self,num_divs=30, div_size=5):
     # Plane parallel to x-z at origin with normal -y
     minx = -num_divs*div_size
     miny = -num_divs*div_size
@@ -264,7 +265,6 @@ class MultiViewer3D(object):
       self.edges = self.graph.edges
 
   def init_guess_callback(self):
-    print(dir(pango))
     self.graph.initial_guess()
     self.graph.update_key_position()
     self.update()

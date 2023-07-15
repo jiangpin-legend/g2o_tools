@@ -5,6 +5,7 @@ import pickle
 
 import g2o
 import numpy as np
+import re
 # from sophus import *
 
 from viewer import Viewer3D
@@ -172,6 +173,13 @@ class PoseGraph3D(object):
       linearize_pose.append(np.concatenate(linearize_point[0:2,3],linearize_rot))
     linearize_pose = np.array(linearize_pose)
     
+def is_file_renamed(filename):
+  sub_string = 'renamed'
+  pattern = re.compile(sub_string)
+  if pattern.search(filename):
+    return True
+  else:
+    return False
 
 if __name__ == "__main__":
   if len(sys.argv) > 1:
@@ -236,6 +244,28 @@ if __name__ == "__main__":
     # gfile = '/home/jiangpin/dataset/2yuan_new/full_graph_separator.g2o'
 
     gfile = '/home/jiangpin/dataset/2yuan_test/full_graph.g2o'
+    gfile = '/home/jiangpin/dataset/2yuan_test/full_graph.g2o'
+    gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/optimized_renamed.g2o'
+    gfile = '/home/nuc/graph/fullGraph_renamed.g2o'
+    gfile = '/home/nuc/graph/fullGraph_opt_renamed_opt_renamed.g2o'
+    gfile = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/full_graph_renamed.g2o'
+    gfile = "/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/FixLagSmoother/fullGraph_opt_before.g2o"
+    # gfile = "/home/nuc/github/jiangpin/Mapping/src/global_manager/log/FixLagSmoother/fullGraph_opt_before.g2o"
+    gfile = "/home/nuc/github/jiangpin/Mapping/src/global_manager/log/FixLagSmoother/fullGraph_opt_after.g2o"
+    gfile = "/home/nuc/github/jiangpin/Mapping/src/global_manager/log/full_graph.g2o"
+    gfile = '/home/nuc/graph/multi-lio_result/05-16/Fix_fullGraph_opt_before_renamed.g2o'
+    gfile = '/home/nuc/graph/multi-lio_result/05-16/full_graph_renamed.g2o'
+    gfile = "/home/nuc/github/jiangpin/Mapping/src/global_manager/log/FixLagSmoother/fullGraph_opt_after.g2o"
+    # gfile = "/home/nuc/github/jiangpin/Mapping/src/global_manager/log/FixLagSmoother/fullGraph_opt_before.g2o"
+
+
+    # gfile = "/home/nuc/github/jiangpin/Mapping/src/global_manager/log/full_graph.g2o"
+    # gfile = "/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/FixLagSmoother/fullGraph_opt_after.g2o"
+
+
+
+    
+
 
 
 
@@ -246,25 +276,19 @@ if __name__ == "__main__":
 
 
 
+  if is_file_renamed(gfile):
+    pass
+  else:
+    g2o_tool = G2oTool()
+    _,_ = g2o_tool.read(gfile)
+    g2o_tool.rename_id()
+    str1,str2 = gfile.split('.')
+    gfile = str1+'_renamed.g2o'
 
   graph = PoseGraph3D(verbose=True,use_transform=False)
   graph.load_file(gfile)
-  # graph.optimize(300)
   print("loaded:"+gfile)
-  viewer = MultiViewer3D(graph,3,gfile)
-  # for edge in  graph.optimizer.edges():
-  #   print(dir(edge))
-  #   print(edge.measurement().matrix())
-  #   print(type(edge.measurement().matrix()))
-  #   m = SE3(edge.measurement().matrix())
-  #   print(m.inverse())
-  #   print(dir(m))
-
-  #   break
-  # print(dir(edge))
-
-  # graph.optimize()
-  # viewer = Viewer3D(graph)
+  viewer = MultiViewer3D(graph,4,gfile)
 
 
 
