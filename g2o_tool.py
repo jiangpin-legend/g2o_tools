@@ -1,15 +1,22 @@
 #!/usr/bin/python3.6
 # -*- coding: UTF-8 -*-
+import pickle
 
 class G2oTool:
     def __init__(self) -> None:
         self.vertex = {}
         self.edge = {}
+        
     
     def read(self,file_name):
         self.file_name = file_name
         vertex = {}
         edge = {}
+        name_list = self.file_name.split('/')
+        self.base_dir = ''
+        for each in name_list[0:-1]:
+            self.base_dir+=each+'/'
+
         with open(file_name,'r') as g2o_file:
             for each_line in g2o_file:
                 try:
@@ -146,8 +153,102 @@ class G2oTool:
         base_name = self.file_name.split('.')
         # print(base_name)
         file_name = base_name[0]+'_renamed.g2o'
+        self.renamed_vertex = renamed_vertex
+        self.renamed_edge = renamed_edge
+
         self.write_dict(file_name,renamed_vertex,renamed_edge)
+    
         
+    def reorder_id(self):
+        renamed_vertex = {}
+        id_map = {}
+        global_id_map = {}
+        global_id = 0
+        # print(self.renamed_vertex.keys())
+
+        for key in self.renamed_vertex.keys():
+            id_map[key] = str(global_id)
+            global_id_map[str(global_id)] = key
+            renamed_vertex[str(global_id)] = self.renamed_vertex[key]
+            global_id+=1
+
+
+        renamed_edge = {}
+        # print(self.renamed_edge.keys())
+        for key_pair in self.renamed_edge.keys():
+            new_key0 = id_map[key_pair[0]]
+            new_key1 = id_map[key_pair[1]]
+            new_key_pair = (new_key0,new_key1)
+            renamed_edge[new_key_pair] = self.renamed_edge[key_pair]
+        base_name = self.file_name.split('.')
+        name_list = self.file_name.split('/')
+        base_dir = ''
+        for each in name_list[0:-1]:
+            base_dir+=each+'/'
+
+        print(base_dir)
+        file_name = base_name[0]+'_reordered.g2o'
+        id_map_name = base_dir+'/key_map.pkl'
+        id_map_txt = base_dir+'/key_map.txt'
+        with open(id_map_txt,'w') as file:
+            for key,value in zip(global_id_map.keys(),global_id_map.values()):
+                # print(key,value)
+                file.write(str(key)+','+str(self.id_g2o2gtsam(int(value)))+'\n')
+
+        self.write_dict(file_name,renamed_vertex,renamed_edge)
+        with open(id_map_name,'wb') as file:
+            pickle.dump(global_id_map,file)
+
+    def remap_id(self):
+        name_list = self.file_name.split('/')
+        base_dir = ''
+        for each in name_list[0:-1]:
+            base_dir+=each+'/'
+        id_map_name = base_dir+'/key_map.pkl'
+        file = open(id_map_name,'rb')
+        id_map = pickle.load(file)
+        # print(id_map)
+        vertex = {}
+        for key in self.vertex.keys():
+            new_key = id_map[key]
+            vertex[new_key] = self.vertex[key]
+
+        edge = {}
+        for key_pair in self.edge.keys():
+            new_key0 = id_map[key_pair[0]]
+            new_key1 = id_map[key_pair[1]]
+            new_key_pair = (new_key0,new_key1)
+            edge[new_key_pair] = self.edge[key_pair]
+        base_name = self.file_name.split('.')
+        file_name = base_name[0]+'_remapped.g2o'
+        self.write_dict(file_name,vertex,edge)
+
+    def seperate_inner(self,max_num = 10):
+        robot_vertex = {}
+        robot_edge = {}
+        for i in range(0,max_num):
+            robot_vertex[i] = {}
+            robot_edge[i] = {}
+        
+        for key in self.vertex.keys():
+            robot_id = self.key2robot_id(key)
+            robot_vertex[robot_id][key] = self.vertex[key]
+
+        for key_pair in self.edge.keys():
+            id0 = self.key2robot_id(key_pair[0])
+            id1 = self.key2robot_id(key_pair[1])
+            if(id0==id1):
+                robot_edge[id0][key_pair] = self.edge[key_pair]
+
+            # new_key_pair = (new_key0,new_key1)
+        for i in range(0,max_num):
+            if(robot_vertex[i]!={}):
+                file_name = self.base_dir+"/"+str(i)+"_inner.g2o"
+                self.write_dict(file_name,robot_vertex[i],robot_edge[i])
+
+        
+        # print(base_name)
+
     def indentify_orentation(self):
         for key in self.edge.keys():
             value = self.edge[key]
@@ -156,7 +257,7 @@ class G2oTool:
             value[5] = '0'
             value[6] = '1'
 
-            self.edge[key] = value
+            self.edge[key] = valuegoogl
             
         base_name = self.file_name.split('.')
         file_name = base_name[0]+'_identity.g2o'

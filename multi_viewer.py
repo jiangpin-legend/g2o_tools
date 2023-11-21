@@ -6,8 +6,15 @@ import pangolin as pango
 import numpy as np
 import OpenGL.GL as gl
 import OpenGL.GLUT as glut
-from multi_robot_tools import MultiRobotTools
 
+import tkinter as tk
+from tkinter import filedialog
+from PyQt5.QtWidgets import QFileDialog,QMainWindow
+
+from g2o_tool import G2oTool
+from posegraph import is_file_renamed
+from posegraph import PoseGraph3D
+from multi_robot_tools import MultiRobotTools
 class MultiViewer3D(object):
   '''
   3d viewer for g2o maps
@@ -33,9 +40,14 @@ class MultiViewer3D(object):
     self.separator_edges = self.graph.separator_edges 
     self.separator_nodes = np.dot(self.graph.separator_nodes,self.tform)
     self.partition_graph_np()
+
+    root = tk.Tk()
+    root.withdraw()
+
     while not pango.ShouldQuit():
       self.refresh()
 
+  
   def init(self):
     w, h = (1024,768)
     f = 2000 #420
@@ -73,6 +85,7 @@ class MultiViewer3D(object):
     # self.dcam.SetDrawFunction(draw)
     # self.rename_id = pango.VarString('ui.rename id', "10")
     # self.rename_id_dir = pango.VarString('ui.rename id dir', "10")
+    self.load_button =pango.VarFunc("ui.Open File",self.open_file_dialog)
 
     self.reset_view_button = pango.VarBool('ui.Reset View', value=False, toggle=False)
     self.show_grid = pango.VarBool('ui.Show Grid', value=True, toggle=True)
@@ -113,7 +126,20 @@ class MultiViewer3D(object):
     pango.RegisterKeyPressCallback(ord('r'), self.optimize_callback)
     pango.RegisterKeyPressCallback(ord('t'), self.switch_callback)
 
-    
+  
+  def reload_graph(self,graph):
+    self.graph = graph
+    self.nodes = np.dot(graph.nodes, self.tform)
+    self.edges = np.array(graph.edges)
+    #keep default robot num
+    # self.robot_num = robot_num
+    self.nodes_keys = np.array(graph.nodes_keys)
+    self.edges_key_pairs = np.array(graph.edges_key_pairs)
+    self.multi_robot_tools = MultiRobotTools()
+    self.separator_edges = self.graph.separator_edges 
+    self.separator_nodes = np.dot(self.graph.separator_nodes,self.tform)
+    self.partition_graph_np()
+
   def color_init(self):
     color_list = [[255,69,0],[255,215,0],[0,255,127],[0,191,255],[138,43,226]]
     self.color_list = color_list
@@ -210,8 +236,9 @@ class MultiViewer3D(object):
       # print("----------robot"+str(robot_id)+'-----------')
       # print(node_key)
 
-
-      edge_id_mask = np.array([ (self.multi_robot_tools.key2robot_id_g2o(key_pair[0]) ==robot_id or self.multi_robot_tools.key2robot_id_g2o(key_pair[1])==robot_id)
+      
+      edge_id_mask = np.array([ (self.multi_robot_tools.key2robot_id_g2o(key_pair[0]) ==robot_id or self.multi_robot_tools.key2robot_id_g2o(key_pair[1])==robot_id) 
+                                and (self.multi_robot_tools.key2robot_id_g2o(key_pair[0])== self.multi_robot_tools.key2robot_id_g2o(key_pair[1]))
                                for key_pair in self.edges_key_pairs])
 
       edges_key_pairs = self.edges_key_pairs[edge_id_mask]
@@ -304,3 +331,26 @@ class MultiViewer3D(object):
         elif self.show_gtsam_id.Get():
           new_key =  self.multi_robot_tools.id_g2o2gtsam(key)
           self.draw_text(value,str(new_key))
+    
+  def open_file_dialog(self):
+    # file_name, _ = QFileDialog.getOpenFileName(self.qt_main_window , "Open File", "../map", "Image Files (*.png *.jpg *.bmp)")
+    # if file_name:
+    #   print(file_name)
+    name_list = self.file_name.split('/')
+    base_dir = ''
+    for each in name_list[0:-1]:
+        base_dir+=each+'/'
+    file_path = filedialog.askopenfilename(title="select input graph file",initialdir=base_dir)
+    print(file_path)
+    if is_file_renamed(file_path):
+        pass
+    else:
+        g2o_tool = G2oTool()
+        _,_ = g2o_tool.read(file_path)
+        g2o_tool.rename_id()
+        g2o_tool.reorder_id()
+        str1,str2 = file_path.split('.')
+        file_path = str1+'_renamed.g2o'
+    graph = PoseGraph3D(verbose=True,use_transform=False)
+    graph.load_file(file_path)
+    self.reload_graph(graph)

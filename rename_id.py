@@ -8,7 +8,7 @@ g2o_file_name = '/home/jiangpin/graph/graph/fullGraph.g2o'
 g2o_file_name = '/home/jiangpin/graph/0221/graph/readFullGraph.g2o'
 g2o_file_name = '/home/jiangpin/dataset/graph/readFullGraph.g2o'
 g2o_file_name = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/optimized.g2o'
-g2o_file_name = '/home/nuc/github/lusha/Multi-robot-SLAM/MR_SLAM/Mapping/src/global_manager/log/full_graph.g2o'
+g2o_file_name = '/home/jiangpin/projects/Multi-Robot-SLAM/Multi-Robot-LIO/src/global_manager/log/FixLagSmoother/fullGraph_opt_before.g2o'
 
 
 # g2o_file_name = "/home/nuc/graph/fullGraph_opt_renamed_opt.g2o"

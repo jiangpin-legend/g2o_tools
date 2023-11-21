@@ -249,6 +249,27 @@ class MultiRobotTools():
                         edge_dict[robot_id].update({key_pair:edge[key_pair]})
                 self.g2o_tool.write_dict(base_name+str(robot_id)+'.g2o',vertex_dict[robot_id],edge_dict[robot_id])
 
+    def partition_graph_g2o_inner(self,file_name):
+            vertex,edge = self.g2o_tool.read(file_name)
+            base_name_list = file_name.split('/')
+            base_name = ''
+            for i in range(len(base_name_list)-1):
+                base_name =base_name+base_name_list[i]+'/'
+            vertex_dict = {}
+            edge_dict = {}
+            
+            for robot_id in range(self.robot_num):
+                vertex_dict[robot_id] = {}
+                edge_dict[robot_id] = {}
+                for key in vertex.keys():
+                    if(self.key2robot_id_g2o(key)==robot_id):
+                        vertex_dict[robot_id].update({key:vertex[key]})
+                for key_pair in edge.keys():
+                    if(self.key2robot_id_g2o(key_pair[0])==robot_id or self.key2robot_id_g2o(key_pair[1])==robot_id):
+                        if(self.key2robot_id_g2o(key_pair[0])==self.key2robot_id_g2o(key_pair[1])):
+                            edge_dict[robot_id].update({key_pair:edge[key_pair]})
+                self.g2o_tool.write_dict(base_name+str(robot_id)+'_inner.g2o',vertex_dict[robot_id],edge_dict[robot_id])
+
     def aggregate_separator(self):
         for each_robot in self.edge_dict.keys():
             edge_dict = self.edge_dict[each_robot]
