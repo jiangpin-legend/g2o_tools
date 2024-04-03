@@ -148,8 +148,7 @@ else:
     # gfile = "/home/jiangpin/dataset/Darpa/ku-20230811T101027Z-001/ku/g2o_pcd/result.g2o"
     
     # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/srrg2_ws/data/104_2robot/full_graph.g2o"
-    # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/srrg2_ws/data/104_2robot/remain_optimized.g2o"
-
+    # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/srrg2_ws/data/104_2robot/remain_optimized.g
     gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/EGNC-PGO/experiments/data/3_robot_005/remain_optimized.g2o"
 
     # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/srrg2_ws/data/3_robot_005/full_graph.g2o"
@@ -172,21 +171,38 @@ else:
     # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Kimera-RPGO/data/S3E_clollege_025/result.g2o"
     # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Kimera-RPGO/data/S3E_clollege_025/full_.g2o"
     gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Kimera-RPGO/data/S3E_clollege_025/fullGraph_opt_after.g2o"
-    gfile = "/home/jiangpin/dataset/s3e/fullGraph_opt_after.g2o"
+    gfile = "/home/jiangpin/dataset/s3e//fullGraph_opt_after.g2o"
 
+    gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Multi-Robot-LIO/src/global_manager/log/3_robot_1116/full_graph.g2o"
+    gfile = "/home/jiangpin/dataset/s3e/result.g2o"
+    gfile = "/home/jiangpin/dataset/s3e/newFactors.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/separatorReorder.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/full_graph.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e_12_4/full_graph.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e_12_4/fullGraph_opt_after.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e_2_22/fullGraph_opt_after.g2o"
+    gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Multi-Robot-LIO/src/global_manager/log/3_robot_1116/fullGraph_opt_after.g2o"
+    # gfile = "/home/jiangpin/dataset/3_robot_1116/fullGraph_opt_after.g2o"
+    # gfile = "/home/jiangpin/dataset/kitti00_data/full_graph.g2o"
+    # gfile = "/home/jiangpin/dataset/kitti00_data/fullGraph_opt_after.g2o"
+    # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Multi-Robot-LIO/src/global_manager/log/3_robot_1116/full_graph.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/keyframeBALM/optimizedGraph.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/keyframeBALM/optimizedGraph_remapped.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/keyframeBALM/optimizedGraphSimple_remapped.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/keyframeBALM/localOptimizedGraph.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/keyframeBALM/localOptimizedGraph.g2o"
+
+    # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Kimera-RPGO/data/s3e_sparse/result.g2o"
+    # gfile = "/home/jiangpin/dataset/s3e/fullGraph_opt_after.g2o"
+    # gfile = "/home/jiangpin/dataset/kitti08_data/fullGraph_opt_after.g2o"
+    # gfile = "/home/jiangpin/dataset/kitti00_data_xxc/fullGraph_opt_after.g2o"
+    # gfile = "/home/jiangpin/dataset/kitti05_data/fullGraph_opt_after.g2o"
+    gfile = "/home/jiangpin/dataset/kitti02_data/fullGraph_opt_after.g2o"
+
+    # gfile = "/home/jiangpin/dataset/s3e_1120/full_graph.g2o"
 
     
-
-
-
-
-
-
-
-
-
-
-
+    # gfile = "/home/jiangpin/projects/Multi-Robot-SLAM/Kimera-RPGO/separator.g2o"
 
     if is_file_renamed(gfile):
         pass
@@ -194,7 +210,7 @@ else:
         g2o_tool = G2oTool()
         _,_ = g2o_tool.read(gfile)
         g2o_tool.rename_id()
-        # g2o_tool.reorder_id()
+        g2o_tool.reorder_id()
         str1,str2 = gfile.split('.')
         gfile = str1+'_renamed.g2o'
 

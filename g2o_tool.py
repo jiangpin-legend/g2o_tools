@@ -1,6 +1,7 @@
 #!/usr/bin/python3.6
 # -*- coding: UTF-8 -*-
 import pickle
+from separator import Separator
 
 class G2oTool:
     def __init__(self) -> None:
@@ -37,7 +38,7 @@ class G2oTool:
         with open(file_name,'r') as g2o_file:
             for each_line in g2o_file:
                 try:
-                    g2o__line = each_line.split('    ')
+                    g2o__line = each_line.split(' ')
                     identifier= g2o__line[0]
                     if identifier == 'VERTEX_SE3:QUAT':
                         pass
@@ -135,7 +136,7 @@ class G2oTool:
     def id_g2o2gtsam(self,key):
         gtsam_id = [6989586621679000000,7061644215716930000,7133701809754860000]
         robot_id = self.key2robot_id_g2o(key)
-        result = gtsam_id[robot_id]+key%10000
+        result = gtsam_id[robot_id]+key%100000
         return result
 
     def rename_id(self):
@@ -223,6 +224,33 @@ class G2oTool:
         file_name = base_name[0]+'_remapped.g2o'
         self.write_dict(file_name,vertex,edge)
 
+    def remap_id_gtsam(self):
+        name_list = self.file_name.split('/')
+        base_dir = ''
+        for each in name_list[0:-1]:
+            base_dir+=each+'/'
+        id_map_name = base_dir+'/key_map.txt'
+        id_map = {}
+        with open(id_map_name,'r') as id_map_file:
+            for each_line in id_map_file:
+                each_line = each_line.strip('\n')
+                id_map_line = each_line.split(',')
+                id_map[id_map_line[0]] = id_map_line[1]
+        vertex = {}
+        for key in self.vertex.keys():
+            new_key = id_map[key]
+            vertex[new_key] = self.vertex[key]
+
+        edge = {}
+        for key_pair in self.edge.keys():
+            new_key0 = id_map[key_pair[0]]
+            new_key1 = id_map[key_pair[1]]
+            new_key_pair = (new_key0,new_key1)
+            edge[new_key_pair] = self.edge[key_pair]
+        base_name = self.file_name.split('.')
+        file_name = base_name[0]+'_remapped.g2o'
+        self.write_dict(file_name,vertex,edge)
+
     def seperate_inner(self,max_num = 10):
         robot_vertex = {}
         robot_edge = {}
@@ -248,6 +276,21 @@ class G2oTool:
 
         
         # print(base_name)
+    def get_separator(self):
+        self.separator = Separator()
+        for key_pair in self.edge.keys():
+            if(self.is_separator(key_pair)):
+                if(not self.separator.exists(key_pair)):
+                    id0 = self.key2robot_id(key_pair[0])
+                    id1 = self.key2robot_id(key_pair[1])
+                    
+                    vertex0 = self.vertex_dict[id0][key_pair[0]]
+                    vertex1 = self.vertex_dict[id1][key_pair[1]]
+                    edge = edge_dict[key_pair]
+
+                    self.separator.add(key_pair,vertex0,vertex1,edge)
+        file_name = os.path.join(self.base_dir,'separator'+'.g2o')
+        self.g2o_tool.write_dict(file_name,self.separator.vertex,self.separator.edge)
 
     def indentify_orentation(self):
         for key in self.edge.keys():
